@@ -27,7 +27,8 @@ func f2(arg int) error {
 
 	err := f3(arg)
 	if err != nil {
-		return Wrap(err, frame, NewCauseFunc().AddName("f3").AddArgs(FuncArgs{"arg": arg}), "msg")
+		cause := NewCauseFunc().AddName("f3").AddArgs(FuncArgs{"arg": arg})
+		return Wrap(err, frame, &cause, "msg")
 	}
 	return nil
 }

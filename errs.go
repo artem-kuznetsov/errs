@@ -39,25 +39,18 @@ type FuncData map[string]interface{}
 
 //--------------------------------------------------
 
-func NewFrameFunc() *FrameFunc {
-	return &FrameFunc{}
+func NewFrameFunc() FrameFunc {
+	return FrameFunc{
+		Name: callerName(),
+	}
 }
 
-func NewCauseFunc() *CauseFunc {
-	return &CauseFunc{}
-}
-
-func (f *FrameFunc) AddName(n string) *FrameFunc {
-	f.Name = n
-	return f
-}
-
-func (f *FrameFunc) AddArgs(a FuncArgs) *FrameFunc {
+func (f FrameFunc) AddArgs(a FuncArgs) FrameFunc {
 	f.Args = a
 	return f
 }
 
-func (f *FrameFunc) AddData(d FuncData) *FrameFunc {
+func (f FrameFunc) AddData(d FuncData) FrameFunc {
 	if f.Data == nil {
 		f.Data = d
 		return f
@@ -68,12 +61,18 @@ func (f *FrameFunc) AddData(d FuncData) *FrameFunc {
 	return f
 }
 
-func (f *CauseFunc) AddName(n string) *CauseFunc {
+//--------------------------------------------------
+
+func NewCauseFunc() CauseFunc {
+	return CauseFunc{}
+}
+
+func (f CauseFunc) AddName(n string) CauseFunc {
 	f.Name = n
 	return f
 }
 
-func (f *CauseFunc) AddArgs(a FuncArgs) *CauseFunc {
+func (f CauseFunc) AddArgs(a FuncArgs) CauseFunc {
 	f.Args = a
 	return f
 }
@@ -100,14 +99,8 @@ func (err *errorWrapper) withWrapPlace() *errorWrapper {
 	return err
 }
 
-func (err *errorWrapper) withFrameFunc(f *FrameFunc) *errorWrapper {
-	if f == nil {
-		f = NewFrameFunc()
-	}
-	if f.Name == "" {
-		f.Name = callerName()
-	}
-	err.CallStack[len(err.CallStack)-1].FrameFunc = *f
+func (err *errorWrapper) withFrameFunc(f FrameFunc) *errorWrapper {
+	err.CallStack[len(err.CallStack)-1].FrameFunc = f
 	return err
 }
 
@@ -118,9 +111,12 @@ func (err *errorWrapper) withCauseFunc(f *CauseFunc) *errorWrapper {
 
 //--------------------------------------------------
 
-func Wrap(err error, frameFunc *FrameFunc, causeFunc *CauseFunc, msg string) error {
-	ew := wrap(err).addFrame()
-	ew = ew.withWrapMessage(msg).withWrapPlace().withFrameFunc(frameFunc)
+func Wrap(err error, frameFunc FrameFunc, causeFunc *CauseFunc, msg string) error {
+	ew := wrap(err).addFrame().
+		withWrapMessage(msg).
+		withWrapPlace().
+		withFrameFunc(frameFunc)
+
 	if ew.CallStack[0].CauseFunc == nil {
 		ew = ew.withCauseFunc(causeFunc)
 	}
@@ -137,7 +133,7 @@ func wrap(err error) *errorWrapper {
 }
 
 func callerName() string {
-	pc, _, _, _ := runtime.Caller(3)
+	pc, _, _, _ := runtime.Caller(2)
 	return runtime.FuncForPC(pc).Name()
 }
 
