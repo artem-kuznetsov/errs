@@ -11,7 +11,7 @@ func main() {
 }
 
 func f1(arg int) error {
-	frame := NewFrameFunc().AddArgs(FuncArgs{"arg": arg})
+	frame := NewFrameFunc(FuncArgs{"arg": arg})
 	arg = arg + 1
 
 	err := f2(arg)
@@ -22,13 +22,13 @@ func f1(arg int) error {
 }
 
 func f2(arg int) error {
-	frame := NewFrameFunc().AddArgs(FuncArgs{"arg": arg})
+	frame := NewFrameFunc(FuncArgs{"arg": arg})
 	arg = arg + 1
 
 	err := f3(arg)
 	if err != nil {
-		cause := NewCauseFunc().AddName("f3").AddArgs(FuncArgs{"arg": arg})
-		return Wrap(err, frame, &cause, "msg")
+		cause := NewCauseFunc("f3", FuncArgs{"arg": arg})
+		return Wrap(err, frame, cause, "msg")
 	}
 	return nil
 }

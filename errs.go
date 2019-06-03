@@ -37,88 +37,64 @@ type FuncArgs map[string]interface{}
 
 type FuncData map[string]interface{}
 
-//--------------------------------------------------
-
-func NewFrameFunc() FrameFunc {
+func NewFrameFunc(args FuncArgs) FrameFunc {
 	return FrameFunc{
 		Name: callerName(),
+		Args: args,
 	}
 }
 
-func (f FrameFunc) AddArgs(a FuncArgs) FrameFunc {
-	f.Args = a
-	return f
+func NewCauseFunc(name string, args FuncArgs) *CauseFunc {
+	return &CauseFunc{
+		Name: name,
+		Args: args,
+	}
 }
 
-func (f FrameFunc) AddData(d FuncData) FrameFunc {
+func (f *FrameFunc) AddData(d FuncData) {
 	if f.Data == nil {
 		f.Data = d
-		return f
 	}
 	for k, v := range d {
 		f.Data[k] = v
 	}
-	return f
 }
-
-//--------------------------------------------------
-
-func NewCauseFunc() CauseFunc {
-	return CauseFunc{}
-}
-
-func (f CauseFunc) AddName(n string) CauseFunc {
-	f.Name = n
-	return f
-}
-
-func (f CauseFunc) AddArgs(a FuncArgs) CauseFunc {
-	f.Args = a
-	return f
-}
-
-//--------------------------------------------------
 
 func (err *errorWrapper) Error() string {
 	b, _ := json.Marshal(err)
-	return fmt.Sprint(string(b))
+	return string(b)
 }
 
-func (err *errorWrapper) addFrame() *errorWrapper {
+func (err *errorWrapper) addFrame() {
 	err.CallStack = append(err.CallStack, frame{})
-	return err
 }
 
-func (err *errorWrapper) withWrapMessage(msg string) *errorWrapper {
+func (err *errorWrapper) withWrapMessage(msg string) {
 	err.CallStack[len(err.CallStack)-1].wrapContext.Message = msg
-	return err
 }
 
-func (err *errorWrapper) withWrapPlace() *errorWrapper {
+func (err *errorWrapper) withWrapPlace() {
 	err.CallStack[len(err.CallStack)-1].wrapContext.Place = callerLocation()
-	return err
 }
 
-func (err *errorWrapper) withFrameFunc(f FrameFunc) *errorWrapper {
+func (err *errorWrapper) withFrameFunc(f FrameFunc) {
 	err.CallStack[len(err.CallStack)-1].FrameFunc = f
-	return err
 }
 
-func (err *errorWrapper) withCauseFunc(f *CauseFunc) *errorWrapper {
+func (err *errorWrapper) withCauseFunc(f *CauseFunc) {
 	err.CallStack[len(err.CallStack)-1].CauseFunc = f
-	return err
 }
-
-//--------------------------------------------------
 
 func Wrap(err error, frameFunc FrameFunc, causeFunc *CauseFunc, msg string) error {
-	ew := wrap(err).addFrame().
-		withWrapMessage(msg).
-		withWrapPlace().
-		withFrameFunc(frameFunc)
+	ew := wrap(err)
+
+	ew.addFrame()
+	ew.withWrapMessage(msg)
+	ew.withWrapPlace()
+	ew.withFrameFunc(frameFunc)
 
 	if ew.CallStack[0].CauseFunc == nil {
-		ew = ew.withCauseFunc(causeFunc)
+		ew.withCauseFunc(causeFunc)
 	}
 	return ew
 }
