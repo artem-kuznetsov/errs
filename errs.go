@@ -6,6 +6,10 @@ import (
 	"runtime"
 )
 
+const (
+	NonSerializableValue = "non-serializable"
+)
+
 type errorWrapper struct {
 	Err       string  `json:"error"`
 	CallStack []frame `json:"callstack"`
